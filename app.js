@@ -24,12 +24,7 @@ mongoose.connect('mongodb://localhost:27017/movieDB', {
   if (err) throw err;
   console.log('Подключение к Mongo установлено');
 });
-app.use(cors({
-  origin: [
-    'http://localhost:3000',
-  ],
-  credentials: true,
-}));
+app.use(cors());
 
 app.use(requestLogger);
 app.use(bodyParser.json());
