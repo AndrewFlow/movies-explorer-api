@@ -9,10 +9,12 @@ const {
   INVALID_DATA,
   FORBIDDEN_MESSAGE,
   INVALID_ID,
+  MISSING_CARD,
 } = require('../constants/constants');
 
 const getMovies = (req, res, next) => {
   Movie.find({ owner: req.user._id })
+    .populate('owner')
     .then((movies) => res.send(movies))
     .catch(next);
 };
@@ -56,29 +58,22 @@ const postMovie = (req, res, next) => {
 };
 
 const deleteMovie = (req, res, next) => {
-  const userId = req.user._id;
-  const { movieId } = req.params;
-
-  Movie.findOne({ movieId })
+  Movie.findById(req.params._id)
     .then((movie) => {
-      if (!movie) {
-        throw new ResourceNotFound(INVALID_ID);
+      switch (true) {
+        case !movie
+          : throw new ResourceNotFound(MISSING_CARD);
+        case !movie.owner.equals(req.user._id)
+          : throw new Forbidden(FORBIDDEN_MESSAGE);
+        default
+          : return movie.remove().then(() => res.send(movie));
       }
-      const owner = movie.owner.toString();
-
-      if (owner !== userId) {
-        throw new Forbidden(FORBIDDEN_MESSAGE);
-      }
-      Movie.findByIdAndDelete(movie._id)
-        .then((data) => res.send(data))
-        .catch(next);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(new BadRequest(INVALID_ID));
-      } else {
-        next(err);
+        return next(new BadRequest(INVALID_ID));
       }
+      return next(err);
     });
 };
 
