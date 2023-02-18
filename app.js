@@ -14,8 +14,8 @@ const routerUser = require('./routes/user');
 const routerMovie = require('./routes/movies');
 const routerMain = require('./routes/main');
 
-const { PORT = 3000 } = process.env;
 const app = express();
+const { PORT = 3001 } = process.env;
 
 mongoose.connect('mongodb://localhost:27017/movieDB', {
   useNewUrlParser: true,
@@ -24,10 +24,15 @@ mongoose.connect('mongodb://localhost:27017/movieDB', {
   if (err) throw err;
   console.log('Подключение к Mongo установлено');
 });
-app.use(cors());
-
-app.use(requestLogger);
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:3001',
+  ],
+  credentials: true,
+}));
 app.use(bodyParser.json());
+app.use(requestLogger);
 
 app.post('/signin', celebrate({
   body: Joi.object().keys({
